@@ -1,154 +1,138 @@
 import React from 'react';
-import { 
-  Building2, 
-  TrendingUp, 
-  Users, 
-  Plus, 
-  Filter, 
-  MoreHorizontal,
-  MapPin,
-  DollarSign
+import {
+  Building2, TrendingUp, ShoppingCart, CheckCircle,
+  Clock, XCircle, ArrowUpRight, MapPin, BarChart3
 } from 'lucide-react';
+import { PROPERTIES, TRANSACTIONS, formatPrice } from '../data';
 import './Dashboard.css';
 
-const StatCard = ({ icon, label, value, trend }: any) => (
-  <div className="stat-card glass">
-    <div className="stat-icon-wrapper">
-      {icon}
-    </div>
-    <div className="stat-details">
-      <p className="stat-label">{label}</p>
-      <h3 className="stat-value">{value}</h3>
-      <p className="stat-trend">
-        <TrendingUp size={14} />
-        <span>{trend}% from last month</span>
-      </p>
+const StatCard = ({ icon, iconClass, label, value, trend, trendLabel }: any) => (
+  <div className="card stat-card">
+    <div className={`stat-icon ${iconClass}`}>{icon}</div>
+    <div className="stat-info">
+      <div className="stat-label">{label}</div>
+      <div className="stat-value">{value}</div>
+      {trend !== undefined && (
+        <div className="stat-trend">
+          <TrendingUp size={12} />
+          <span>{trend}% {trendLabel || 'this month'}</span>
+        </div>
+      )}
     </div>
   </div>
 );
 
-const PropertyRow = ({ property }: any) => (
-  <tr className="property-row">
-    <td>
-      <div className="property-info">
-        <div className="property-image-mini" style={{ backgroundImage: `url(${property.image})` }} />
-        <div className="property-meta">
-          <p className="property-name">{property.name}</p>
-          <p className="property-location">
-            <MapPin size={12} />
-            {property.location}
-          </p>
-        </div>
-      </div>
-    </td>
-    <td>{property.type}</td>
-    <td>
-      <div className="property-price">
-        <DollarSign size={14} />
-        {property.price.toLocaleString()}
-      </div>
-    </td>
-    <td>
-      <span className={`status-badge ${property.status.toLowerCase()}`}>
-        {property.status}
-      </span>
-    </td>
-    <td>
-      <button className="icon-button-sm">
-        <MoreHorizontal size={18} />
-      </button>
-    </td>
-  </tr>
-);
+const txnTypeClass: Record<string, string> = {
+  Buy: 'badge-available',
+  Reserve: 'badge-reserved',
+  Cancelled: 'badge-sold',
+};
+const txnTypeIcon: Record<string, React.ReactNode> = {
+  Buy: <CheckCircle size={14} />,
+  Reserve: <Clock size={14} />,
+  Cancelled: <XCircle size={14} />,
+};
 
-const Dashboard = () => {
-  const stats = [
-    { icon: <Building2 className="icon-gold" />, label: 'Managed Properties', value: '124', trend: '12' },
-    { icon: <DollarSign className="icon-gold" />, label: 'Total Portfolio Value', value: '$84.2M', trend: '8.4' },
-    { icon: <Users className="icon-gold" />, label: 'Active Clients', value: '48', trend: '5.2' },
-  ];
+export default function DashboardPage() {
+  const available = PROPERTIES.filter(p => p.status === 'Available').length;
+  const reserved  = PROPERTIES.filter(p => p.status === 'Reserved').length;
+  const sold      = PROPERTIES.filter(p => p.status === 'Sold').length;
+  const totalVal  = PROPERTIES.filter(p => p.status === 'Available').reduce((a, p) => a + p.price, 0);
 
-  const properties = [
-    { 
-      name: 'The Azure Penthouse', 
-      location: 'Dubai Marina, UAE', 
-      type: 'Penthouse', 
-      price: 4500000, 
-      status: 'Active',
-      image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=400&q=80'
-    },
-    { 
-      name: 'Villa de Prestige', 
-      location: 'French Riviera, France', 
-      type: 'Modern Villa', 
-      price: 12800000, 
-      status: 'Sold',
-      image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=400&q=80'
-    },
-    { 
-      name: 'Skyline Residence', 
-      location: 'Manhattan, NYC', 
-      type: 'Apartment', 
-      price: 3200000, 
-      status: 'Pending',
-      image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=400&q=80'
-    },
-    { 
-      name: 'Oakwood Estate', 
-      location: 'Cotswolds, UK', 
-      type: 'Mansion', 
-      price: 7500000, 
-      status: 'Active',
-      image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=400&q=80'
-    },
-  ];
+  const recentTransactions = TRANSACTIONS.slice(0, 5);
+  const recentProperties   = PROPERTIES.slice(0, 4);
 
   return (
-    <div className="dashboard-page">
+    <div className="page">
       <div className="page-header">
         <div>
-          <h2 className="page-title">Property Inventory</h2>
-          <p className="page-subtitle">Manage your premium real estate portfolio</p>
+          <div className="page-title">Dashboard</div>
+          <div className="page-subtitle">Welcome back, Janet — here's your property overview</div>
         </div>
-        <div className="header-actions">
-          <button className="btn-secondary">
-            <Filter size={18} />
-            Filters
-          </button>
-          <button className="btn-primary">
-            <Plus size={18} />
-            List New Property
-          </button>
+        <div className="page-actions">
+          <div className="dashboard-date">
+            <BarChart3 size={15} />
+            <span>April 2025 Report</span>
+          </div>
         </div>
       </div>
 
+      {/* Stats */}
       <div className="stats-grid">
-        {stats.map((stat, i) => <StatCard key={i} {...stat} />)}
+        <StatCard
+          icon={<Building2 size={22} />} iconClass="stat-icon-green"
+          label="Available Properties" value={available}
+          trend={14} trendLabel="from last month"
+        />
+        <StatCard
+          icon={<Clock size={22} />} iconClass="stat-icon-amber"
+          label="Reserved" value={reserved}
+          trend={5} trendLabel="from last month"
+        />
+        <StatCard
+          icon={<CheckCircle size={22} />} iconClass="stat-icon-red"
+          label="Sold This Month" value={sold}
+          trend={8} trendLabel="from last month"
+        />
+        <StatCard
+          icon={<ShoppingCart size={22} />} iconClass="stat-icon-blue"
+          label="Total Available Value" value={formatPrice(totalVal)}
+        />
       </div>
 
-      <div className="inventory-section glass">
-        <div className="section-header">
-          <h3>Recent Listings</h3>
-          <button className="text-button">View All</button>
+      {/* Two-column lower area */}
+      <div className="dashboard-lower">
+        {/* Recent Transactions */}
+        <div className="card dashboard-card">
+          <div className="section-header">
+            <div className="section-title">Recent Transactions</div>
+            <button className="btn btn-ghost btn-sm">View All <ArrowUpRight size={14} /></button>
+          </div>
+          <div className="txn-list">
+            {recentTransactions.map(txn => (
+              <div key={txn.id} className="txn-row">
+                <div className={`txn-type-icon ${txn.type === 'Buy' ? 'txn-buy' : txn.type === 'Reserve' ? 'txn-reserve' : 'txn-cancel'}`}>
+                  {txnTypeIcon[txn.type]}
+                </div>
+                <div className="txn-info">
+                  <div className="txn-name">{txn.propertyName}</div>
+                  <div className="txn-sub">{txn.clientName} · {txn.date.split(' ')[0]}</div>
+                </div>
+                <div className="txn-right">
+                  <span className={`badge ${txnTypeClass[txn.type]}`}>{txn.type}</span>
+                  <div className="txn-amount">{formatPrice(txn.amount)}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        
-        <table className="inventory-table">
-          <thead>
-            <tr>
-              <th>Property Details</th>
-              <th>Type</th>
-              <th>Price</th>
-              <th>Status</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {properties.map((p, i) => <PropertyRow key={i} property={p} />)}
-          </tbody>
-        </table>
+
+        {/* Recent Listings */}
+        <div className="card dashboard-card">
+          <div className="section-header">
+            <div className="section-title">Recent Listings</div>
+            <button className="btn btn-ghost btn-sm">View All <ArrowUpRight size={14} /></button>
+          </div>
+          <div className="listings-list">
+            {recentProperties.map(p => (
+              <div key={p.id} className="listing-row">
+                <div className={`listing-status-bar ${p.status.toLowerCase()}`} />
+                <div className="listing-info">
+                  <div className="listing-name">{p.name}</div>
+                  <div className="listing-meta">
+                    <MapPin size={12} />
+                    <span>{p.location}</span>
+                  </div>
+                </div>
+                <div className="listing-right">
+                  <div className="listing-price">{formatPrice(p.price)}</div>
+                  <span className={`badge badge-${p.status.toLowerCase()}`}>{p.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
-};
-
-export default Dashboard;
+}
